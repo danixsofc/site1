@@ -1,0 +1,19 @@
+{
+  "name": "sistema-bancario-moderno",
+  "version": "1.0.0",
+  "description": "Sistema bancário moderno com autenticação e painel administrativo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
