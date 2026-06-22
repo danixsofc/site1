@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Bancário Moderno</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --primary: #3b82f6; 
+            --primary-hover: #2563eb; --text: #f8fafc; --text-muted: #94a3b8;
+            --danger: #ef4444; --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        .container { background: var(--card); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: none; }
+        .container.active { display: block; animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h2 { text-align: center; margin-bottom: 1.5rem; color: var(--primary); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-muted); }
+        input { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+        input:focus { border-color: var(--primary); }
+        
+        button { width: 100%; padding: 0.75rem; border: none; border-radius: 6px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 1rem; }
+        button:hover { background: var(--primary-hover); }
+        button.danger { background: var(--danger); }
+        button.success { background: var(--success); }
+        
+        .switch-link { text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted); cursor: pointer; }
+        .switch-link span { color: var(--primary); }
+        
+        .dashboard-info { background: #0f172a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #334155; }
+        .dashboard-info p { margin-bottom: 0.5rem; }
+        .balance { font-size: 2rem; font-weight: bold; color: var(--success); text-align: center; margin: 1rem 0; }
+        
+        .alert { padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; display: none; text-align: center; font-size: 0.875rem; }
+        .alert.error { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); display: block; }
+        .alert.success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); display: block; }
+
+        .btn-group { display: flex; gap: 0.5rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container active" id="login-view">
+        <h2>Entrar</h2>
+        <div id="login-alert" class="alert"></div>
+        <form id="login-form">
+            <div class="form-group">
+                <label>Usuário ou E-mail</label>
+                <input type="text" id="login-user" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="login-pass" required>
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="switch-link" onclick="switchView('register-view')">Não tem uma conta? <span>Criar Conta</span></div>
+    </div>
+
+    <div class="container" id="register-view">
+        <h2>Criar Conta</h2>
+        <div id="register-alert" class="alert"></div>
+        <form id="register-form">
+            <div class="form-group">
+                <label>Nome de Usuário</label>
+                <input type="text" id="reg-user" required>
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="reg-pass" required>
+            </div>
+            <button type="submit">Cadastrar</button>
+        </form>
+        <div class="switch-link" onclick="switchView('login-view')">Já possui conta? <span>Fazer Login</span></div>
+    </div>
+
+    <div class="container" id="dashboard-view">
+        <h2>Painel do Usuário</h2>
+        <div class="dashboard-info">
+            <p><strong>Usuário:</strong> <span id="dash-user"></span></p>
+            <p><strong>E-mail:</strong> <span id="dash-email"></span></p>
+            <p><strong>Membro desde:</strong> <span id="dash-date"></span></p>
+        </div>
+        <div class="balance">R$ <span id="dash-balance">0.00</span></div>
+        
+        <button onclick="switchView('admin-view')" style="background: #64748b;">⚙️ Configurações (Painel Admin)</button>
+        <button class="danger" onclick="logout()">Sair da Conta</button>
+    </div>
+
+    <div class="container" id="admin-view">
+        <h2>Painel Administrativo</h2>
+        <div id="admin-alert" class="alert"></div>
+        <form id="admin-form">
+            <div class="form-group">
+                <label>Senha Administrativa</label>
+                <input type="password" id="admin-pass" required>
+            </div>
+            <div class="form-group">
+                <label>Nome do Usuário Alvo</label>
+                <input type="text" id="admin-target" required>
+            </div>
+            <div class="form-group">
+                <label>Quantia (R$)</label>
+                <input type="number" id="admin-amount" step="0.01" min="0.01" required>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="success" onclick="manageBalance('add')">Adicionar Saldo</button>
+                <button type="button" class="danger" onclick="manageBalance('remove')">Remover Saldo</button>
+            </div>
+        </form>
+        <button onclick="loadDashboard()" style="background: #64748b; margin-top: 1rem;">Voltar ao Início</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        // Controle de Telas
+        function switchView(viewId) {
+            document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            clearAlerts();
+        }
+
+        function showAlert(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `alert ${type}`;
+        }
+
+        function clearAlerts() {
+            document.querySelectorAll('.alert').forEach(el => el.className = 'alert');
+        }
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const login = document.getElementById('login-user').value;
+            const password = document.getElementById('login-pass').value;
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    loadDashboard();
+                } else {
+                    showAlert('login-alert', data.error, 'error');
+                }
+            } catch (err) { showAlert('login-alert', 'Erro de conexão.', 'error'); }
+        });
+
+        // Cadastro
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reg-user').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pass').value;
+
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showAlert('register-alert', 'Conta criada! Faça login.', 'success');
+                    setTimeout(() => switchView('login-view'), 2000);
+                } else {
+                    showAlert('register-alert', data.error, 'error');
+                }
+            } catch (err) { showAlert('register-alert', 'Erro de conexão.', 'error'); }
+        });
+
+        // Carregar Dados do Dashboard
+        async function loadDashboard() {
+            const token = localStorage.getItem('token');
+            if (!token) return switchView('login-view');
+
+            try {
+                const res = await fetch(`${API_URL}/me`, {
+                    headers: { 'Authorization': token }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('dash-user').textContent = data.username;
+                    document.getElementById('dash-email').textContent = data.email;
+                    document.getElementById('dash-balance').textContent = parseFloat(data.balance).toFixed(2);
+                    document.getElementById('dash-date').textContent = new Date(data.created_at).toLocaleDateString('pt-BR');
+                    switchView('dashboard-view');
+                } else {
+                    logout();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            switchView('login-view');
+            document.getElementById('login-form').reset();
+        }
+
+        // Painel Administrativo
+        async function manageBalance(action) {
+            const adminPassword = document.getElementById('admin-pass').value;
+            const targetUsername = document.getElementById('admin-target').value;
+            const amount = document.getElementById('admin-amount').value;
+            const token = localStorage.getItem('token');
+
+            if (!adminPassword || !targetUsername || !amount) {
+                return showAlert('admin-alert', 'Preencha todos os campos.', 'error');
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/admin/balance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify({ adminPassword, targetUsername, amount, action })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showAlert('admin-alert', data.message, 'success');
+                    document.getElementById('admin-form').reset();
+                } else {
+                    showAlert('admin-alert', data.error, 'error');
+                }
+            } catch (err) { showAlert('admin-alert', 'Erro de conexão.', 'error'); }
+        }
+
+        // Auto-login (Persistência)
+        window.onload = () => {
+            if (localStorage.getItem('token')) {
+                loadDashboard();
+            }
+        };
+    </script>
+</body>
+</html>
